@@ -38,6 +38,9 @@ class LeafNode:
 
     def __init__(self, examples):
         self.examples = examples
+
+    def __getitem__(self, position):
+        return self.examples[position]
         
     def __repr__(self):
         return "LeafNode: {}".format(self.examples)
@@ -66,7 +69,17 @@ class DecisionNode:
 
 
 hold_result = DecisionNode()
-visited_attributes = []
+chosen_attributes = []
+
+
+class Question:
+    
+    def __init__(self, decision_fork, edges):
+        self.decision_fork = decision_fork
+        self.edges = edges
+    
+    def __repr__(self):
+        return "{} {}".format(self.decision_fork, self.edges)
 
 
 def decision_tree_learning(examples, attributes, *parent_examples):
@@ -82,24 +95,21 @@ def decision_tree_learning(examples, attributes, *parent_examples):
     else:
         selected_attribute = split_on_which_attribute(examples, attributes)
         partitioned_examples = partition(selected_attribute, examples)
-        visited_attributes.append(selected_attribute)
+        chosen_attributes.append(selected_attribute)
         for subset in partitioned_examples:
-            # print(subset)
             decision_tree_learning(
                 subset,
-                attributes,
-                exclude_previous_attribute(attributes, visited_attributes),
+                exclude_previous_attribute(attributes, chosen_attributes),
                 partitioned_examples)
     return hold_result
 
 
 def exclude_previous_attribute(attributes, exclude):
     '''exclude an attribute in order to avoid redundancy'''
-    print(exclude)
     for attribute in attributes:
         if attribute in exclude:
             attributes.remove(attribute)
-    print(attributes)
+    # print(attributes)
     return attributes
 
 
@@ -184,7 +194,7 @@ def information_gain(attribute, examples):
         print("Entrophy value: " + str(entropy(subset)) + "\n")
         probability = float(len(subset)/len(examples))
         entrophy_list.append(value_entropy_pair(each_value, entropy(subset), probability))
-    
+
     remainder = 0
     for each_entropy_value in entrophy_list:
         remainder += each_entropy_value.entrophy * each_entropy_value.probability
@@ -247,8 +257,17 @@ def partition(attribute_to_split_on, examples):
 
 def simplify_tree(decision_tree):
     '''make result look better'''
+    print("\nThe followings are leaf nodes: \n")
     for branch in decision_tree:
         print(branch)
+    print("\n")
+
+
+# def print_tree(decision_tree):
+#     '''print tree'''
+#     for split_decision in chosen_attributes:
+        
+#     # return Non
 
 
 if __name__ == '__main__':
@@ -261,7 +280,7 @@ if __name__ == '__main__':
     clean_examples = []
 
     for example in examples:
-        if len(example) >= 5:
+        if len(example) != 0:
             clean_examples.append(example)
         else:
             pass
@@ -270,3 +289,6 @@ if __name__ == '__main__':
 
     classified_result = decision_tree_learning(clean_examples, attributes)
     simplify_tree(classified_result)
+
+    print("The following attributes were used to split examples (in order): ")
+    print(chosen_attributes)
